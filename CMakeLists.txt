@@ -11,3 +11,14 @@ target_include_directories(conjunction_core PUBLIC src)
 
 add_executable(conjunction src/cli/main.cpp)
 target_link_libraries(conjunction PRIVATE conjunction_core)
+
+include(FetchContent)
+FetchContent_Declare(Catch2
+    GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+    GIT_TAG v3.7.1)
+FetchContent_MakeAvailable(Catch2)
+
+enable_testing()
+add_executable(unit_tests tests/test_smoke.cpp)
+target_link_libraries(unit_tests PRIVATE conjunction_core Catch2::Catch2WithMain)
+add_test(NAME unit_tests COMMAND unit_tests)
