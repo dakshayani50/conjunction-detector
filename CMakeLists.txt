@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 add_compile_options(-Wall -Wextra -Wpedantic)
 
-add_library(conjunction_core src/core.cpp)
+add_library(conjunction_core src/core.cpp src/ingest/omm.cpp)
 target_include_directories(conjunction_core PUBLIC src)
 
 add_executable(conjunction src/cli/main.cpp)
