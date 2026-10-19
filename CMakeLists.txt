@@ -29,6 +29,7 @@ add_library(conjunction_core
     src/core.cpp
     src/ingest/omm.cpp
     src/propagation/sgp4_propagator.cpp
+    src/screening/conjunction_screen.cpp
 )
 
 target_include_directories(conjunction_core
