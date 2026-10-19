@@ -9,6 +9,7 @@ add_compile_options(-Wall -Wextra -Wpedantic)
 add_library(conjunction_core
     src/core.cpp
     src/ingest/omm.cpp
+    src/propagation/sgp4_propagator.cpp
 )
 
 target_include_directories(conjunction_core PUBLIC src)
