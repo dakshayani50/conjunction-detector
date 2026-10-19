@@ -30,6 +30,8 @@ add_library(conjunction_core
     src/ingest/omm.cpp
     src/propagation/sgp4_propagator.cpp
     src/screening/conjunction_screen.cpp
+    src/analysis/close_approach.cpp
+    src/time/epoch.cpp
 )
 
 target_include_directories(conjunction_core
