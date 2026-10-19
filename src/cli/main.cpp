@@ -1,50 +1,85 @@
-
-#include <iomanip>
 #include <iostream>
 #include <stdexcept>
+#include <vector>
 
+#include "analysis/close_approach.hpp"
 #include "core.hpp"
 #include "ingest/omm.hpp"
 #include "propagation/sgp4_propagator.hpp"
 
 int main(int argc, char** argv) {
-    std::cout << "conjunction detector " << cdet::version() << "\n";
+    std::cout << "conjunction detector "
+              << cdet::version() << "\n";
 
     if (argc < 2) {
-        std::cerr << "usage: " << argv[0] << " <catalog.csv>\n";
+        std::cerr << "usage: conjunction <catalog.csv>\n";
         return 1;
     }
 
     try {
-        const auto sats = cdet::load_catalog_csv(argv[1]);
+        auto satellites = cdet::load_catalog_csv(argv[1]);
 
-        std::cout << "loaded " << sats.size() << " satellites\n";
+        std::cout << "loaded "
+                  << satellites.size()
+                  << " satellites\n";
 
-        if (sats.empty()) {
-            return 0;
+        if (satellites.size() < 2) {
+            std::cerr << "need at least two satellites\n";
+            return 1;
         }
 
-        const auto& satellite = sats[0];
+        // Use a small subset for the first end-to-end run.
+        const std::size_t sample_size =
+            std::min<std::size_t>(satellites.size(), 100);
 
-        std::cout << "propagating: " << satellite.name
-                  << " (NORAD " << satellite.norad_id << ")\n";
+        std::vector<std::size_t> candidate_indices;
 
-        const auto state = cdet::propagate(satellite, satellite.epoch);
+        for (std::size_t i = 0; i < sample_size; ++i) {
+            candidate_indices.push_back(i);
+        }
 
-        std::cout << std::fixed << std::setprecision(6);
+        std::cout << "screening "
+                  << candidate_indices.size()
+                  << " satellites\n";
 
-        std::cout << "position (km): "
-                  << state.x_km << ", "
-                  << state.y_km << ", "
-                  << state.z_km << "\n";
+        const std::string start_epoch =
+            satellites[0].epoch;
 
-        std::cout << "velocity (km/s): "
-                  << state.vx_km_s << ", "
-                  << state.vy_km_s << ", "
-                  << state.vz_km_s << "\n";
+        const auto results =
+            cdet::find_close_approaches(
+                satellites,
+                candidate_indices,
+                start_epoch,
+                6,
+                10.0,
+                50.0
+            );
+
+        std::cout << "close approaches found: "
+                  << results.size() << "\n";
+
+        for (const auto& result : results) {
+            const auto& first =
+                satellites[result.first_index];
+
+            const auto& second =
+                satellites[result.second_index];
+
+            std::cout << "\nCONJUNCTION CANDIDATE\n";
+            std::cout << "  A: " << first.name
+                      << " (NORAD " << first.norad_id << ")\n";
+            std::cout << "  B: " << second.name
+                      << " (NORAD " << second.norad_id << ")\n";
+            std::cout << "  epoch: "
+                      << result.epoch << "\n";
+            std::cout << "  miss distance: "
+                      << result.miss_distance_km
+                      << " km\n";
+        }
 
     } catch (const std::exception& e) {
-        std::cerr << "error: " << e.what() << "\n";
+        std::cerr << "error: "
+                  << e.what() << "\n";
         return 1;
     }
 

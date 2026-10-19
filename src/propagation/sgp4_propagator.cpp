@@ -1,6 +1,7 @@
 #include "propagation/sgp4_propagator.hpp"
 
-#include <stdexcept>
+#include <iomanip>
+#include <sstream>
 #include <string>
 
 #include "DateTime.h"
@@ -10,27 +11,34 @@
 
 namespace cdet {
 
-StateVector propagate(const Satellite& satellite, const std::string& epoch) {
-    const std::string csv =
-        satellite.name + "," +
-        satellite.intl_id + "," +
-        satellite.epoch + "," +
-        std::to_string(satellite.mean_motion) + "," +
-        std::to_string(satellite.eccentricity) + "," +
-        std::to_string(satellite.inclination) + "," +
-        std::to_string(satellite.raan) + "," +
-        std::to_string(satellite.arg_perigee) + "," +
-        std::to_string(satellite.mean_anomaly) + "," +
-        "0," +
-        "U," +
-        std::to_string(satellite.norad_id) + "," +
-        "0," +
-        "0," +
-        std::to_string(satellite.bstar) + "," +
-        std::to_string(satellite.mean_motion_dot) + "," +
-        std::to_string(satellite.mean_motion_ddot);
+StateVector propagate(
+    const Satellite& satellite,
+    const std::string& epoch) {
 
-    const auto tle = libsgp4::Tle::FromCsv(csv);
+    std::ostringstream csv;
+
+    csv << std::setprecision(17)
+        << satellite.name << ","
+        << satellite.intl_id << ","
+        << satellite.epoch << ","
+        << satellite.mean_motion << ","
+        << satellite.eccentricity << ","
+        << satellite.inclination << ","
+        << satellite.raan << ","
+        << satellite.arg_perigee << ","
+        << satellite.mean_anomaly << ","
+        << "0,"
+        << "U,"
+        << satellite.norad_id << ","
+        << "0,"
+        << "0,"
+        << satellite.bstar << ","
+        << satellite.mean_motion_dot << ","
+        << satellite.mean_motion_ddot;
+
+    const auto tle =
+        libsgp4::Tle::FromCsv(csv.str());
+
     const libsgp4::SGP4 propagator(tle);
 
     const libsgp4::DateTime date(
@@ -42,7 +50,9 @@ StateVector propagate(const Satellite& satellite, const std::string& epoch) {
         std::stod(epoch.substr(17))
     );
 
-    const libsgp4::Eci eci = propagator.FindPosition(date);
+    const libsgp4::Eci eci =
+        propagator.FindPosition(date);
+
     const auto position = eci.Position();
     const auto velocity = eci.Velocity();
 
